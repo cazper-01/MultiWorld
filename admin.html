@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Panel - ModernNews</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="admin-container">
+    <!-- Sidebar Navigation -->
+    <div class="admin-sidebar">
+      <h3>Admin Panel</h3>
+      <ul>
+        <li><a href="#" class="active" data-section="view-posts">View Posts</a></li>
+        <li><a href="#" data-section="add-post">Add New Post</a></li>
+        <li><a href="#" data-section="settings">Settings</a></li>
+      </ul>
+      <hr style="margin: 20px 0; border: none; border-top: 1px solid rgba(255,255,255,0.1);">
+      <ul>
+        <li><a href="#" id="logoutBtn" style="color: #d32f2f;">Logout</a></li>
+      </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="admin-main">
+      <!-- View Posts Section -->
+      <section id="view-posts" class="admin-section active">
+        <h2>All Posts</h2>
+        <p style="color: #999; margin-bottom: 20px;">Manage your published articles</p>
+
+        <div class="admin-posts-table">
+          <table>
+            <thead>
+              <tr>
+                <th>Image</th>
+                <th>Title & Category</th>
+                <th>Description</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="postsTableBody">
+              <tr>
+                <td colspan="4" style="text-align: center; color: #999; padding: 40px;">Loading posts...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- Add/Edit Post Section -->
+      <section id="add-post" class="admin-section">
+        <h2>Create New Post</h2>
+        <p style="color: #999; margin-bottom: 20px;">Add a new article to your news website</p>
+
+        <form id="postForm" style="max-width: 600px;">
+          <div class="form-group">
+            <label for="postTitle">Post Title *</label>
+            <input 
+              type="text" 
+              id="postTitle" 
+              name="title" 
+              required 
+              placeholder="e.g., Latest AI Breakthrough"
+            >
+          </div>
+
+          <div class="form-group">
+            <label for="postCategory">Category *</label>
+            <select id="postCategory" name="category" required>
+              <option value="">Select a category</option>
+              <option value="ICT">ICT</option>
+              <option value="Nature">Nature</option>
+              <option value="Technology">Technology</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="postImage">Image URL *</label>
+            <input 
+              type="url" 
+              id="postImage" 
+              name="imageUrl" 
+              required 
+              placeholder="https://example.com/image.jpg"
+            >
+            <small style="color: #999; display: block; margin-top: 5px;">Provide a valid image URL</small>
+          </div>
+
+          <div class="form-group">
+            <label for="postShortDesc">Short Description *</label>
+            <textarea 
+              id="postShortDesc" 
+              name="shortDescription" 
+              required 
+              placeholder="A brief summary of the article (2-3 sentences)"
+              style="min-height: 80px;"
+            ></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="postFullArticle">Full Article *</label>
+            <textarea 
+              id="postFullArticle" 
+              name="fullArticle" 
+              required 
+              placeholder="Write the complete article content here"
+              style="min-height: 250px;"
+            ></textarea>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" id="submitBtn" class="btn-primary">Create Post</button>
+            <button type="button" id="cancelBtn" class="btn-secondary">Cancel</button>
+          </div>
+        </form>
+      </section>
+
+      <!-- Settings Section -->
+      <section id="settings" class="admin-section">
+        <h2>Settings</h2>
+        <p style="color: #999; margin-bottom: 20px;">Admin panel settings and information</p>
+
+        <div style="background-color: #fff; padding: 20px; border-radius: 8px; max-width: 600px;">
+          <h3 style="margin-bottom: 15px;">About This Website</h3>
+          <p style="margin-bottom: 15px; color: #666;">
+            <strong>ModernNews</strong> is a modern news website built with Firebase. 
+            It features real-time article management with a secure admin panel and public reader interface.
+          </p>
+
+          <h3 style="margin-bottom: 15px; margin-top: 25px;">Admin Panel Features</h3>
+          <ul style="margin-left: 20px; color: #666;">
+            <li style="margin-bottom: 8px;">✓ Real-time article management</li>
+            <li style="margin-bottom: 8px;">✓ Secure Firebase Authentication</li>
+            <li style="margin-bottom: 8px;">✓ Firestore database storage</li>
+            <li style="margin-bottom: 8px;">✓ Create, read, update, delete posts</li>
+            <li style="margin-bottom: 8px;">✓ Categorized content (ICT, Nature, Technology)</li>
+            <li style="margin-bottom: 8px;">✓ Mobile-responsive design</li>
+          </ul>
+
+          <h3 style="margin-bottom: 15px; margin-top: 25px;">Logged in as</h3>
+          <p id="currentUserEmail" style="color: #d32f2f; font-weight: bold;"></p>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script type="module">
+    import { initializeAdmin } from './admin.js';
+    import { getCurrentUser, checkAuthState } from './auth.js';
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+      initializeAdmin();
+      
+      // Display current user email
+      checkAuthState((user) => {
+        if (user) {
+          const emailEl = document.getElementById('currentUserEmail');
+          if (emailEl) {
+            emailEl.textContent = user.email;
+          }
+        }
+      });
+    });
+  </script>
+</body>
+</html>

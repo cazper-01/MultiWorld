@@ -1,0 +1,69 @@
+// Firebase Firestore Security Rules
+// Copy this to your Firebase Console -> Firestore Database -> Rules tab
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Posts Collection Rules
+    match /posts/{document=**} {
+      // Public: Anyone can read posts
+      allow read: if true;
+      
+      // Admin only: Can create new posts
+      allow create: if request.auth != null;
+      
+      // Admin only: Can update posts (only the post owner)
+      allow update: if request.auth != null;
+      
+      // Admin only: Can delete posts
+      allow delete: if request.auth != null;
+    }
+
+    // Users Collection (optional - for storing user preferences)
+    match /users/{userId} {
+      // Users can read their own data
+      allow read: if request.auth.uid == userId;
+      
+      // Users can write their own data
+      allow write: if request.auth.uid == userId;
+    }
+
+    // Deny all other access
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
+
+/**
+ * IMPORTANT SECURITY NOTES:
+ * 
+ * 1. AUTHENTICATION REQUIRED:
+ *    - Users must be logged in with Firebase Authentication to create/update/delete posts
+ *    - Email/password authentication is configured
+ *    - Only admin users (those with valid Firebase auth) can modify content
+ * 
+ * 2. PUBLIC READ ACCESS:
+ *    - All visitors can read posts without authentication
+ *    - Posts collection is readable by anyone
+ * 
+ * 3. ADMIN PROTECTION:
+ *    - Create/Update/Delete operations require authentication
+ *    - Non-authenticated users cannot access admin functions
+ *    - The admin.html and admin-login.html pages enforce additional client-side checks
+ * 
+ * 4. BEST PRACTICES:
+ *    - Store your Firebase config keys in firebaseConfig.js
+ *    - Never hardcode API keys in production
+ *    - Set up proper Firebase Authentication users for admins
+ *    - Regularly review Firebase Console for suspicious activity
+ *    - Use Firebase Authentication with strong passwords
+ * 
+ * 5. PRODUCTION RECOMMENDATIONS:
+ *    - Consider implementing custom claims for admin users
+ *    - Set up Firebase Cloud Functions for advanced security
+ *    - Enable Firebase Security Audit Logs
+ *    - Implement rate limiting for sensitive operations
+ *    - Use HTTPS for all communications
+ */

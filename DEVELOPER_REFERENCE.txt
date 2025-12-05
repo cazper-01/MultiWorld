@@ -1,0 +1,364 @@
+========================================
+DEVELOPER QUICK REFERENCE
+========================================
+
+🔧 FIREBASE SDK IMPORTS
+-----------------------
+
+// In each file, use these imports from CDN:
+
+// Initialization & Config
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+import { getFirestore } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+
+// Authentication Functions
+import { 
+  signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+
+// Firestore Functions
+import {
+  collection,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  doc,
+  query,
+  orderBy,
+  onSnapshot,
+  serverTimestamp,
+  getDoc,
+  getDocs,
+  limit
+} from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+
+🔐 AUTHENTICATION FUNCTIONS
+--------------------------
+
+// Login (in auth.js)
+export async function loginAdmin(email, password) {
+  const userCredential = await signInWithEmailAndPassword(auth, email, password);
+  return userCredential.user;
+}
+
+// Logout (in auth.js)
+export async function logoutAdmin() {
+  await signOut(auth);
+}
+
+// Check Auth State (in auth.js)
+export function checkAuthState(callback) {
+  onAuthStateChanged(auth, (user) => {
+    callback(user);
+  });
+}
+
+// Get Current User (in auth.js)
+export function getCurrentUser() {
+  return auth.currentUser;
+}
+
+📝 FIRESTORE OPERATIONS
+-----------------------
+
+// CREATE Post
+const postData = {
+  title: "Article Title",
+  category: "ICT",
+  imageUrl: "https://example.com/image.jpg",
+  shortDescription: "Brief summary",
+  fullArticle: "Full content",
+  createdAt: serverTimestamp()
+};
+const docRef = await addDoc(collection(db, 'posts'), postData);
+console.log("Document ID:", docRef.id);
+
+// READ Single Post
+const docRef = doc(db, 'posts', 'postId');
+const docSnap = await getDoc(docRef);
+if (docSnap.exists()) {
+  console.log("Post data:", docSnap.data());
+}
+
+// READ All Posts (Real-time)
+const q = query(collection(db, 'posts'), orderBy('createdAt', 'desc'));
+onSnapshot(q, (snapshot) => {
+  const posts = [];
+  snapshot.forEach((doc) => {
+    posts.push({ id: doc.id, ...doc.data() });
+  });
+  console.log("Posts:", posts);
+});
+
+// UPDATE Post
+const postRef = doc(db, 'posts', 'postId');
+await updateDoc(postRef, {
+  title: "Updated Title",
+  updatedAt: serverTimestamp()
+});
+
+// DELETE Post
+await deleteDoc(doc(db, 'posts', 'postId'));
+
+🎯 COMMON PATTERNS
+------------------
+
+// Pattern 1: Load data and display
+async function loadAndDisplay() {
+  try {
+    const q = query(collection(db, 'posts'), limit(10));
+    const snapshot = await getDocs(q);
+    snapshot.forEach((doc) => {
+      console.log(doc.id, "=>", doc.data());
+    });
+  } catch (error) {
+    console.error("Error:", error);
+  }
+}
+
+// Pattern 2: Real-time listener with cleanup
+let unsubscribe;
+function startListener() {
+  const q = query(collection(db, 'posts'));
+  unsubscribe = onSnapshot(q, (snapshot) => {
+    // Handle updates
+  });
+}
+function stopListener() {
+  if (unsubscribe) unsubscribe();
+}
+
+// Pattern 3: Form submission
+async function handleSubmit(e) {
+  e.preventDefault();
+  try {
+    const formData = {
+      title: document.getElementById('title').value,
+      category: document.getElementById('category').value
+    };
+    await addDoc(collection(db, 'posts'), formData);
+    showMessage('Success!', 'success');
+  } catch (error) {
+    showMessage('Error: ' + error.message, 'error');
+  }
+}
+
+// Pattern 4: Check authentication before action
+checkAuthState((user) => {
+  if (!user) {
+    window.location.href = 'admin-login.html';
+    return;
+  }
+  // User is authenticated, proceed
+});
+
+🎨 CSS CLASSES REFERENCE
+------------------------
+
+// Navigation
+.nav-container        - Main navigation container
+.nav-links           - Navigation links list
+.btn-admin           - Admin button style
+.btn-logout          - Logout button style
+
+// Articles
+.article-card        - Single article card
+.article-grid        - Grid of articles
+.article-image       - Article image
+.article-title       - Article title
+.article-category    - Category badge
+.article-description - Short description
+
+// Full Article
+.article-full        - Full article container
+.article-full-image  - Full article image
+.article-full-title  - Full article title
+.article-full-content - Full article text
+
+// Forms
+.form-group          - Form field wrapper
+.btn-primary         - Primary button
+.btn-secondary       - Secondary button
+.btn-danger          - Danger button
+.form-actions        - Form button container
+
+// Admin
+.admin-container     - Admin layout wrapper
+.admin-sidebar       - Admin sidebar
+.admin-main          - Admin main content
+.admin-section       - Admin section (hidden by default)
+.admin-section.active - Active admin section
+
+// Utilities
+.hidden              - Hide element (display: none)
+.success-message     - Success message styling
+.error-message       - Error message styling
+.empty-state         - Empty state message
+
+🔄 STATE MANAGEMENT
+-------------------
+
+// Global variables for tracking state
+let currentUser = null;
+let allPosts = [];
+let currentEditId = null;
+
+// Initialize state
+function initializeState() {
+  checkAuthState((user) => {
+    currentUser = user;
+    updateUI();
+  });
+  loadData();
+}
+
+// Update UI based on state
+function updateUI() {
+  if (currentUser) {
+    document.getElementById('adminBtn').classList.add('hidden');
+    document.getElementById('logoutBtn').classList.remove('hidden');
+  } else {
+    document.getElementById('adminBtn').classList.remove('hidden');
+    document.getElementById('logoutBtn').classList.add('hidden');
+  }
+}
+
+🐛 ERROR HANDLING
+----------------
+
+// Firebase Auth Errors
+if (error.code === 'auth/user-not-found') {
+  // User doesn't exist
+}
+if (error.code === 'auth/wrong-password') {
+  // Wrong password
+}
+if (error.code === 'auth/invalid-email') {
+  // Invalid email format
+}
+if (error.code === 'auth/too-many-requests') {
+  // Rate limited
+}
+
+// Firestore Errors
+if (error.code === 'permission-denied') {
+  // Security rules blocked access
+}
+if (error.code === 'not-found') {
+  // Document doesn't exist
+}
+
+// Generic error handler
+try {
+  // Operation
+} catch (error) {
+  console.error('Operation failed:', error);
+  showMessage('Error: ' + error.message, 'error');
+}
+
+📊 URL PARAMETERS
+-----------------
+
+// Get query parameter from URL
+const urlParams = new URLSearchParams(window.location.search);
+const articleId = urlParams.get('id');
+const category = urlParams.get('category');
+
+// Navigate with parameters
+window.location.href = `fullarticle.html?id=${postId}`;
+window.location.href = `index.html?category=ICT`;
+
+🎬 EVENT HANDLING
+----------------
+
+// Form submission
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  // Handle form
+});
+
+// Button click
+button.addEventListener('click', () => {
+  // Handle click
+});
+
+// Element click (with event delegation)
+document.addEventListener('click', (e) => {
+  if (e.target.classList.contains('edit-btn')) {
+    // Handle edit
+  }
+});
+
+// Inline onclick (less recommended but used in HTML)
+<button onclick="editPost('${postId}')">Edit</button>
+
+🌐 DEPLOYED ENDPOINTS
+---------------------
+
+// Update these after deployment:
+
+// If using Firebase Hosting:
+https://your-project.firebaseapp.com
+
+// Environment configuration:
+const CONFIG = {
+  production: {
+    apiUrl: 'https://your-project.firebaseapp.com'
+  },
+  development: {
+    apiUrl: 'http://localhost:8000'
+  }
+};
+
+💾 LOCAL STORAGE (Optional)
+---------------------------
+
+// Store user preference
+localStorage.setItem('theme', 'dark');
+
+// Retrieve
+const theme = localStorage.getItem('theme');
+
+// Remove
+localStorage.removeItem('theme');
+
+// Clear all
+localStorage.clear();
+
+🔍 DEBUGGING TIPS
+-----------------
+
+// Check Firebase connection
+console.log(auth.currentUser);
+console.log(db);
+
+// Monitor real-time updates
+onSnapshot(q, (snapshot) => {
+  console.log("Updated:", snapshot.size);
+});
+
+// Check security rules
+// If you see "permission-denied" in console, check Firestore rules
+
+// Enable Firebase Debug Logging
+import { enableLogging } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+enableLogging(true);
+
+// Browser DevTools
+// F12 -> Console -> All errors shown there
+// F12 -> Network -> Check Firebase API calls
+// F12 -> Application -> Check Local Storage
+
+📦 VERSION INFO
+---------------
+
+Firebase SDK Version: 10.7.0
+JavaScript Version: ES6 Modules
+Supported Browsers: All modern browsers
+
+==========================================
+End of Developer Quick Reference
+==========================================
